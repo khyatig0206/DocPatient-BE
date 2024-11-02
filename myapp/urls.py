@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterUserView,get_all_categories,LoginView,GoogleCalendarCallbackView
+from .views import RegisterUserView,get_all_categories,LoginView,GoogleCalendarCallbackView,GoogleCalendarInitView
 
 urlpatterns = [
     path('register/', RegisterUserView.as_view(), name='register'),

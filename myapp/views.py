@@ -10,15 +10,12 @@ from django.shortcuts import redirect
 import os
 from django.conf import settings
 
-CREDS_FILE = os.path.join(settings.BASE_DIR, 'credentials.json')
+
 
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            # User authentication is successful
-            user = serializer.validated_data['user']
-            # Initialize the Google OAuth flow
             flow = Flow.from_client_config(
                 {
                     "web": {
@@ -35,13 +32,10 @@ class LoginView(APIView):
             )
             # Generate the authorization URL
             auth_url, _ = flow.authorization_url(prompt='consent')
-            
-            # Redirect user to the Google OAuth consent screen
-            return redirect(auth_url)
-        
-        # If authentication fails, return errors
+            # You can add token generation logic here if you're using token-based authentication.
+            return Response({"auth_url": auth_url}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class GoogleCalendarCallbackView(APIView):
     def get(self, request):
