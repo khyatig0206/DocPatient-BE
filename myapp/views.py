@@ -24,11 +24,11 @@ class LoginView(APIView):
                         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                         "token_uri": "https://oauth2.googleapis.com/token",
                         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                        "redirect_uris": ["https://docpatient-be.onrender.com/auth/google/callback"]
+                        "redirect_uris": ["https://doc-patient-fe.vercel.app/auth/google/callback"]
                     }
                 },
                 scopes=['https://www.googleapis.com/auth/calendar'],
-                redirect_uri='https://docpatient-be.onrender.com/auth/google/callback'
+                redirect_uri='https://doc-patient-fe.vercel.app/auth/google/callback'
             )
             # Generate the authorization URL
             auth_url, _ = flow.authorization_url(prompt='consent')
@@ -48,11 +48,11 @@ class GoogleCalendarCallbackView(APIView):
                         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                         "token_uri": "https://oauth2.googleapis.com/token",
                         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                        "redirect_uris": ["https://docpatient-be.onrender.com/auth/google/callback"]
+                        "redirect_uris": ["https://doc-patient-fe.vercel.app/auth/google/callback"]
                     }
                 },
             scopes=['https://www.googleapis.com/auth/calendar'],
-            redirect_uri='https://docpatient-be.onrender.com/auth/google/callback'  
+            redirect_uri='https://doc-patient-fe.vercel.app/auth/google/callback'  
         )
         flow.fetch_token(code=code)
         credentials = flow.credentials
