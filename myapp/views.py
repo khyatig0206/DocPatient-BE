@@ -22,7 +22,7 @@ class LoginView(APIView):
             flow = Flow.from_client_secrets_file(
                 CREDS_FILE,
                 scopes=['https://www.googleapis.com/auth/calendar'],
-                redirect_uri='https://f1dd-2405-201-6820-1071-6490-b4ee-1afa-7479.ngrok-free.app/auth/google/callback'
+                redirect_uri='https://docpatient-be.onrender.com/auth/google/callback'
             )
             # Generate the authorization URL
             auth_url, _ = flow.authorization_url(prompt='consent')
@@ -40,7 +40,7 @@ class GoogleCalendarCallbackView(APIView):
         flow = Flow.from_client_secrets_file(
             CREDS_FILE,
             scopes=['https://www.googleapis.com/auth/calendar'],
-            redirect_uri='https://f1dd-2405-201-6820-1071-6490-b4ee-1afa-7479.ngrok-free.app/auth/google/callback'  
+            redirect_uri='https://docpatient-be.onrender.com/auth/google/callback'  
         )
         flow.fetch_token(code=code)
         credentials = flow.credentials
