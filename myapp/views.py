@@ -19,8 +19,17 @@ class LoginView(APIView):
             # User authentication is successful
             user = serializer.validated_data['user']
             # Initialize the Google OAuth flow
-            flow = Flow.from_client_secrets_file(
-                CREDS_FILE,
+            flow = Flow.from_client_config(
+                {
+                    "web": {
+                        "client_id": os.environ["GOOGLE_CLIENT_ID"],
+                        "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
+                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                        "token_uri": "https://oauth2.googleapis.com/token",
+                        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                        "redirect_uris": ["https://docpatient-be.onrender.com/auth/google/callback"]
+                    }
+                },
                 scopes=['https://www.googleapis.com/auth/calendar'],
                 redirect_uri='https://docpatient-be.onrender.com/auth/google/callback'
             )
@@ -37,8 +46,17 @@ class LoginView(APIView):
 class GoogleCalendarCallbackView(APIView):
     def get(self, request):
         code = request.GET.get('code')
-        flow = Flow.from_client_secrets_file(
-            CREDS_FILE,
+        flow = Flow.from_client_config(
+                {
+                    "web": {
+                        "client_id": os.environ["GOOGLE_CLIENT_ID"],
+                        "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
+                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                        "token_uri": "https://oauth2.googleapis.com/token",
+                        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                        "redirect_uris": ["https://docpatient-be.onrender.com/auth/google/callback"]
+                    }
+                },
             scopes=['https://www.googleapis.com/auth/calendar'],
             redirect_uri='https://docpatient-be.onrender.com/auth/google/callback'  
         )
