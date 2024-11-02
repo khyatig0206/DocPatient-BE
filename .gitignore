@@ -1,0 +1,11 @@
+
+*/_pycache__/
+
+.venv/
+
+
+*/migrations/
+
+*.log
+
+.env
