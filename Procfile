@@ -1,0 +1,1 @@
+web: gunicorn Medi_BE.wsgi

@@ -32,7 +32,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
 CORS_ALLOWED_ORIGINS = [
     "https://doc-patient-fe.vercel.app",
-    "https://95b8-2405-201-6820-1071-3c0b-f689-183a-c2da.ngrok-free.app"
+    "https://*",
+    
 ]
 
 INSTALLED_APPS = [
@@ -75,7 +76,7 @@ TEMPLATES = [
     },
 ]
 CSRF_TRUSTED_ORIGINS = [
-    'https://95b8-2405-201-6820-1071-3c0b-f689-183a-c2da.ngrok-free.app'
+    'https://*'
 ]
 WSGI_APPLICATION = 'Medi_BE.wsgi.application'
 
