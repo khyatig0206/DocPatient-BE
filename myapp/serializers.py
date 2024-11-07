@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from .models import CustomUser, Doctor, Category, Profile , BlogPost
+from .models import CustomUser, Doctor, Category, Profile , BlogPost,Appointment
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
-
+from django.templatetags.static import static
 
 
 
@@ -31,23 +31,56 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class DoctorSerializer(serializers.ModelSerializer):
-    user = ProfileSerializer()
-    categories = CategorySerializer(many=True)  # Serialize multiple categories
+    profile  = ProfileSerializer()
+    categories = CategorySerializer(many=True) 
 
     class Meta:
         model = Doctor
-        fields = ['user', 'categories', 'establishment_name' , 'license_number']
+        fields = ['profile', 'categories', 'establishment_name' , 'license_number']
 
 
-# Serializer for BlogPost
-class BlogPostSerializer(serializers.ModelSerializer):
-    author = DoctorSerializer(read_only=True)  # Author details (read-only, as it's set automatically)
-    category = CategorySerializer()  # Nested category details
+
+class BlogCreateSerializer(serializers.ModelSerializer):
+    categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), many=True, required=False)
 
     class Meta:
         model = BlogPost
-        fields = ['id', 'author', 'title', 'image', 'category', 'summary', 'content', 'draft', 'created_at']
+        fields = ['title', 'image', 'categories', 'summary', 'content', 'draft']
+
+    def create(self, validated_data):
+        categories = validated_data.pop('categories', [])
+        blog_post = BlogPost.objects.create(**validated_data)
+        if categories:
+            blog_post.categories.set(categories)  # Set the many-to-many relationship
+        return blog_post
+
+
+
+class BlogPostSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.profile.user.get_full_name', read_only=True)
+    truncated_summary = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BlogPost
+        fields = ['id', 'author_name', 'image', 'title', 'created_at', 'truncated_summary','categories']
+
+    def get_truncated_summary(self, obj):
+        return self.truncate_words(obj.summary, 15)
+
+    def truncate_words(self, value, arg):
+        if not value:
+            return ''
+        words = value.split()
+        if len(words) > arg:
+            return ' '.join(words[:arg]) + '...'
+        return value
     
+    def get_categories(self, obj):
+        # Return a list of category names
+        return [category.name for category in obj.categories.all()]
+    
+
 class RegisterSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, default='/profile-default.png')
     address = serializers.CharField(max_length=255, required=True)
@@ -127,13 +160,76 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=attrs['username'], password=attrs['password'])
         if user is None:
             raise serializers.ValidationError("Invalid username or password.")
+        
         attrs['user'] = user
         return attrs  
     
-# class AppointmentSerializer(serializers.ModelSerializer):
-#     patient = CustomUserSerializer()
-#     doctor = CustomUserSerializer()
 
-#     class Meta:
-#         model = Appointment
-#         fields = ['id', 'patient', 'doctor', 'speciality', 'date', 'start_time', 'end_time', 'google_event_id']
+
+class UserDetailsSerializer(serializers.ModelSerializer):
+    address = serializers.CharField(source='profile.address', read_only=True)
+    city = serializers.CharField(source='profile.city', read_only=True)
+    state = serializers.CharField(source='profile.state', read_only=True)
+    pincode = serializers.IntegerField(source='profile.pincode', read_only=True)
+    doctor_profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'first_name', 'last_name', 'username', 'email', 'is_patient', 'is_doctor', 
+                   'address', 'city', 'state', 'pincode', 'doctor_profile']
+
+    def get_doctor_profile(self, obj):
+        if obj.is_doctor:
+            doctor = Doctor.objects.filter(profile=obj.profile).first()
+            if doctor:
+                return {
+                    'categories': [category.name for category in doctor.categories.all()],
+                    'establishment_name': doctor.establishment_name,
+                    'license_number': doctor.license_number
+                }
+        return None
+    
+
+class AppointmentDetailSerializer(serializers.ModelSerializer):
+    doctor_name = serializers.SerializerMethodField()
+    patient_name = serializers.SerializerMethodField()
+    doctor_profile = serializers.SerializerMethodField()
+    patient_profile = serializers.SerializerMethodField()
+    establishment_name = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Appointment
+        fields = ['doctor_name','patient_name', 'doctor_profile','patient_profile','establishment_name', 'google_event_link', 'date', 'start_time', 'end_time', 'duration']
+
+    def get_doctor_name(self, obj):
+        return f"Dr. {obj.doctor.get_full_name()}"
+    
+    def get_patient_name(self, obj):
+        return f"{obj.patient.get_full_name()}"
+
+    def get_doctor_profile(self, obj):
+        if obj.doctor.profile and obj.doctor.profile.profile_picture:
+            return obj.doctor.profile.profile_picture.url
+        else:
+            # Return the default profile image from the static folder
+            return static('media/profile-default.png')
+        
+    def get_patient_profile(self, obj):
+        if obj.patient.profile and obj.patient.profile.profile_picture:
+            return obj.patient.profile.profile_picture.url
+        else:
+            # Return the default profile image from the static folder
+            return static('media/profile-default.png')
+
+    def get_establishment_name(self, obj):
+        return obj.doctor.profile.doctor_profile.establishment_name
+
+    def get_duration(self, obj):
+        if obj.start_time and obj.end_time:
+            start = obj.start_time
+            end = obj.end_time
+            duration = (end.hour * 60 + end.minute) - (start.hour * 60 + start.minute)
+            hours, minutes = divmod(duration, 60)
+            return f"{hours} hours, {minutes} minutes"
+        return None
