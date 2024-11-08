@@ -1,3 +1,4 @@
+This is the Admin Panel View.
 ![Screenshot (171)](https://github.com/user-attachments/assets/59d711c9-d5e2-4fdf-bd0c-9ad11af9d705)
 ![Screenshot (170)](https://github.com/user-attachments/assets/4e050644-238f-49ba-b604-8b1621a9bdb3)
 ![Screenshot (169)](https://github.com/user-attachments/assets/a36b138c-100e-426d-9094-c10e52e350d9)
